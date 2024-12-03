@@ -1,20 +1,65 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  ImageBackground,
+  Keyboard,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { s } from "./App.style";
+import { Input } from "./components/Input/Input";
+import { useState } from "react";
+import { DisplayTemp } from "./components/DisplayTemp/DisplayTemp";
+import { tempUnitEnum } from "./utils/types";
+import {
+  getConvertedTempValue,
+  getOppositeUnit,
+  isColdWeather,
+} from "./utils/tempConverter";
+import { ButtonSwitchUnit } from "./components/ButtonChangeUnit/ButtonChangeUnit";
 
 export default function App() {
+  const [currentTemp, setCurrentTemp] = useState<number>(0);
+  const [currentUnit, setCurrentUnit] = useState<tempUnitEnum>(tempUnitEnum.C);
+  const oppositeUnit = getOppositeUnit(currentUnit);
+  const convertedTempValue = getConvertedTempValue(oppositeUnit, currentTemp);
+  const onInputChange = (textInput: string) => {
+    const currentTempNumber: number = Number(textInput);
+    if (!isNaN(currentTempNumber)) {
+      setCurrentTemp(currentTempNumber);
+    }
+  };
+  const onPressSwitchUnit = () => {
+    setCurrentUnit(oppositeUnit);
+  };
+  const isCold = isColdWeather(currentUnit, currentTemp);
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <ImageBackground
+      source={
+        isCold ? require("./assets/cold.png") : require("./assets/hot.png")
+      }
+      style={s.imgBackground}
+    >
+      <SafeAreaProvider>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <SafeAreaView style={s.root}>
+            <View style={s.container}>
+              <DisplayTemp
+                convertedTemp={convertedTempValue}
+                oppositeUnit={oppositeUnit}
+              />
+              <Input
+                onInputChange={onInputChange}
+                currentTempValue={currentTemp}
+                currentUnit={currentUnit}
+              />
+              <ButtonSwitchUnit
+                oppositeUnit={oppositeUnit}
+                onPressSwitchUnit={onPressSwitchUnit}
+              />
+            </View>
+          </SafeAreaView>
+        </TouchableWithoutFeedback>
+      </SafeAreaProvider>
+    </ImageBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
